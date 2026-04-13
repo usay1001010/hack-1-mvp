@@ -5,19 +5,24 @@ import "./globals.css";
 const notoSansJp = Noto_Sans_JP({
   variable: "--font-noto-sans-jp",
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
+  weight: ["400"],
+  display: "swap",
 });
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400"],
+  display: "swap",
+  preload: false,
 });
 
 const shippori = Shippori_Mincho({
   variable: "--font-shippori",
   subsets: ["latin"],
-  weight: ["400", "500"],
+  weight: ["400"],
+  display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
