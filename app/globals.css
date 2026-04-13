@@ -1,26 +1,87 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Kurumi palette */
+  --fog-white: #f7f5f2;
+  --warm-white: #ffffff;
+  --charcoal: #2a2a2e;
+  --stone-gray: #8a8a8f;
+  --soft-black: #1a1a1a;
+  --ember-gold: #d4a574;
+  --warm-sand: #f0e4d0;
+  --quiet-teal: #6b9b95;
+  --muted-coral: #d97a6c;
+
+  --background: var(--fog-white);
+  --foreground: var(--charcoal);
+
+  --ease-kurumi: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-fog: var(--fog-white);
+  --color-warm: var(--warm-white);
+  --color-charcoal: var(--charcoal);
+  --color-stone: var(--stone-gray);
+  --color-soft: var(--soft-black);
+  --color-ember: var(--ember-gold);
+  --color-sand: var(--warm-sand);
+  --color-teal: var(--quiet-teal);
+  --color-coral: var(--muted-coral);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-noto-sans-jp), var(--font-inter), system-ui, sans-serif;
+  --font-serif: var(--font-shippori), "Shippori Mincho", serif;
+  --font-display: var(--font-inter), system-ui, sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  font-feature-settings: "palt" 1;
+  -webkit-font-smoothing: antialiased;
 }
+
+/* Fog atmospheric background */
+.fog-bg {
+  background:
+    radial-gradient(1200px 800px at 20% 10%, rgba(212, 165, 116, 0.08), transparent 60%),
+    radial-gradient(900px 700px at 85% 90%, rgba(107, 155, 149, 0.08), transparent 55%),
+    radial-gradient(700px 600px at 50% 50%, rgba(240, 228, 208, 0.25), transparent 65%),
+    var(--fog-white);
+}
+
+/* soft paper texture via noise (tiny) */
+.paper {
+  background-color: var(--warm-white);
+  box-shadow:
+    0 1px 0 rgba(26, 26, 26, 0.03),
+    0 8px 24px -12px rgba(26, 26, 26, 0.08);
+}
+
+.mask-hatch {
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(42, 42, 46, 0.88) 0px,
+    rgba(42, 42, 46, 0.88) 6px,
+    rgba(42, 42, 46, 0.78) 6px,
+    rgba(42, 42, 46, 0.78) 12px
+  );
+}
+
+@keyframes orb-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+.orb-pulse { animation: orb-pulse 3.2s var(--ease-kurumi) infinite; }
+
+@keyframes drift {
+  0% { transform: translate(0, 0); }
+  50% { transform: translate(6px, -6px); }
+  100% { transform: translate(0, 0); }
+}
+.drift { animation: drift 8s ease-in-out infinite; }
+
+::selection { background: var(--ember-gold); color: var(--warm-white); }

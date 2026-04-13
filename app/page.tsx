@@ -1,65 +1,176 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { useAppStore } from "@/lib/store";
+import { FogBackground } from "@/components/FogBackground";
+import { PresenceOrb } from "@/components/PresenceOrb";
+import { MaskedCard } from "@/components/MaskedCard";
+import { BottomNav } from "@/components/BottomNav";
+import { ProximityNotice } from "@/components/ProximityNotice";
+import { timeAgo } from "@/lib/utils";
+
+export default function HomePage() {
+  const router = useRouter();
+  const hydrated = useAppStore((s) => s.hydrated);
+  const onboarded = useAppStore((s) => s.onboarded);
+  const me = useAppStore((s) => s.me);
+  const users = useAppStore((s) => s.users);
+  const matches = useAppStore((s) => s.matches);
+  const triggerProximity = useAppStore((s) => s.triggerProximity);
+
+  useEffect(() => {
+    if (hydrated && !onboarded) router.replace("/welcome");
+  }, [hydrated, onboarded, router]);
+
+  if (!hydrated) return null;
+
+  const activeMatches = matches.filter((m) => m.status !== "archived");
+  const newest = [...activeMatches].sort(
+    (a, b) => new Date(b.metAt).getTime() - new Date(a.metAt).getTime()
+  );
+  const getUser = (id: string) => users.find((u) => u.id === id);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <>
+      <FogBackground />
+      <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-5 pt-10 pb-4">
+        <header className="mb-6">
+          <p
+            className="text-[11px] uppercase tracking-[0.2em] text-stone"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            kurumi
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          <h1
+            className="mt-1 text-2xl text-charcoal"
+            style={{ fontFamily: "var(--font-serif)" }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            きょうの、けはい。
+          </h1>
+        </header>
+
+        <section className="paper rounded-3xl p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <span className="text-[11px] uppercase tracking-[0.2em] text-stone">
+              presence
+            </span>
+            <span className="text-[11px] text-stone">
+              {activeMatches.length}人のけはい
+            </span>
+          </div>
+          <div className="relative flex h-56 items-center justify-center">
+            <div className="absolute">
+              <PresenceOrb seed={me.avatarSeed} size={72} intensity={0.9} label="you" />
+            </div>
+            {activeMatches.slice(0, 6).map((m, i) => {
+              const other = getUser(m.userB);
+              if (!other) return null;
+              const angle = (i / Math.max(1, activeMatches.length)) * Math.PI * 2;
+              const r = 90;
+              const x = Math.cos(angle) * r;
+              const y = Math.sin(angle) * r;
+              return (
+                <motion.div
+                  key={m.id}
+                  className="absolute"
+                  style={{ transform: `translate(${x}px, ${y}px)` }}
+                  initial={{ opacity: 0, scale: 0.6 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.1 + i * 0.08, duration: 0.8 }}
+                >
+                  <PresenceOrb
+                    seed={other.avatarSeed}
+                    size={46 + Math.round(m.score * 24)}
+                    intensity={0.3 + m.score * 0.7}
+                    onClick={() => triggerProximity(m.id)}
+                  />
+                </motion.div>
+              );
+            })}
+          </div>
+          <p className="mt-2 text-center text-xs text-stone">
+            ふれると、近づきます。
+          </p>
+        </section>
+
+        <section className="mt-6">
+          <h2
+            className="mb-3 text-[13px] tracking-wider text-stone"
+            style={{ fontFamily: "var(--font-display)" }}
           >
-            Documentation
-          </a>
-        </div>
+            さいきんの、すれちがい
+          </h2>
+          <ul className="space-y-3">
+            {newest.map((m) => {
+              const other = getUser(m.userB);
+              if (!other) return null;
+              return (
+                <li key={m.id}>
+                  <button
+                    type="button"
+                    onClick={() => triggerProximity(m.id)}
+                    className="paper flex w-full items-center gap-3 rounded-2xl p-3 text-left"
+                  >
+                    <PresenceOrb seed={other.avatarSeed} size={40} intensity={0.5} />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span
+                          className="text-sm text-charcoal"
+                          style={{ fontFamily: "var(--font-serif)" }}
+                        >
+                          {other.displayName}
+                        </span>
+                        <span className="text-[11px] text-stone">
+                          {timeAgo(m.metAt)}
+                        </span>
+                      </div>
+                      <div className="mt-0.5 text-[11px] text-stone">
+                        共通点 {m.commonTags.length}・
+                        {m.status === "connected"
+                          ? "つながっている"
+                          : m.status === "revealed"
+                          ? "ひらいた"
+                          : "まだ、かくれている"}
+                      </div>
+                    </div>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+
+        <section className="mt-8">
+          <h2
+            className="mb-3 text-[13px] tracking-wider text-stone"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            あなたの断片
+          </h2>
+          <div className="grid grid-cols-2 gap-3">
+            {me.cards.slice(0, 4).map((c) => (
+              <MaskedCard key={c.id} card={c} revealed size="sm" />
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-8 mb-4 text-center">
+          <button
+            type="button"
+            onClick={() => {
+              const first = activeMatches[0];
+              if (first) triggerProximity(first.id);
+            }}
+            className="rounded-full border border-stone/30 px-5 py-2 text-[11px] tracking-widest text-stone hover:bg-warm"
+          >
+            ▶︎ demo: proximity
+          </button>
+        </section>
       </main>
-    </div>
+      <BottomNav />
+      <ProximityNotice />
+    </>
   );
 }
