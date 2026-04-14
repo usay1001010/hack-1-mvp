@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MaskedCard } from "./MaskedCard";
 import type { ProfileCard } from "@/lib/types";
 
@@ -14,6 +14,9 @@ type Props = {
 /** The hero S4 reveal: masked cards unfold, common tags highlight. */
 export function RevealSequence({ cards, commonTags, onDone }: Props) {
   const [step, setStep] = useState(0); // 0: intro, 1..N: reveals, N+1: summary
+  const onDoneRef = useRef(onDone);
+  const firedRef = useRef(false);
+  onDoneRef.current = onDone;
 
   useEffect(() => {
     if (step === 0) {
@@ -24,10 +27,11 @@ export function RevealSequence({ cards, commonTags, onDone }: Props) {
       const t = setTimeout(() => setStep((s) => s + 1), 1400);
       return () => clearTimeout(t);
     }
-    if (step === cards.length + 1) {
-      onDone?.();
+    if (step === cards.length + 1 && !firedRef.current) {
+      firedRef.current = true;
+      onDoneRef.current?.();
     }
-  }, [step, cards.length, onDone]);
+  }, [step, cards.length]);
 
   return (
     <div className="relative flex w-full flex-col items-center gap-6">
